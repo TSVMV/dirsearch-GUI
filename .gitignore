@@ -1,0 +1,9 @@
+vendor/
+__pycache__/
+*.pyc
+profiles/
+.mimosa/
+*.egg-info/
+dist/
+build/
+tests/
