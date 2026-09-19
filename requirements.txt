@@ -1,0 +1,2 @@
+# 零第三方依赖：GUI 用标准库 tkinter，dirsearch 本体放 vendor/。
+# 若需文本输出报表，可另行安装（可选，非必需）。
