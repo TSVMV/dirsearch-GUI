@@ -121,6 +121,7 @@ OPTIONS: List[Option] = [
     _o("--find-backup", is_flag=True, help_="查找备份文件"),
 
     # --- 视图 ---
+    _o("-q", long_name="--quiet", is_flag=True, help_="安静模式"),
     _o("--full-url", is_flag=True, help_="输出完整 URL"),
     _o("--redirects-history", is_flag=True, help_="显示跳转历史"),
     _o("--no-color", is_flag=True, help_="禁用彩色输出"),

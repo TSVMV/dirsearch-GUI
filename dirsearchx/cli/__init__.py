@@ -27,7 +27,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     args, passthrough = parser.parse_known_args(argv)
 
     if args.list_vendor:
-        home, ver = config.check_dirsearch()
+        try:
+            home, ver = config.check_dirsearch()
+        except FileNotFoundError as e:
+            print(f"错误: {e}", file=sys.stderr)
+            return 1
         print(f"dirsearch root: {home.path}  (source={home.source})")
         print(f"version: {ver}")
         return 0
@@ -36,11 +40,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         parser.print_help()
         return 2
 
-    home, ver = config.check_dirsearch()
+    try:
+        home, ver = config.check_dirsearch()
+    except FileNotFoundError as e:
+        print(f"错误: {e}", file=sys.stderr)
+        return 1
+
     catalog = load()
     catalog.version = ver
-
-    opts = _passthrough_to_opts(passthrough, catalog)
 
     result_holder: Dict[str, object] = {}
 
@@ -51,7 +58,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     def on_done(res: RunResult):
         result_holder["res"] = res
 
-    runner = Runner(home, opts, catalog, on_line=on_line, on_done=on_done)
+    # 原样透传：直接使用 passthrough 参数，不经 opts/argv 重建
+    # （避免丢失可多次选项、重排顺序、未知选项取值被误判为 flag）
+    runner = Runner(home, {}, catalog, on_line=on_line, on_done=on_done,
+                    raw_argv=passthrough)
     runner.start()
     runner._thread.join()  # 等待完成
 
@@ -70,30 +80,6 @@ def main(argv: Optional[List[str]] = None) -> int:
             ensure_ascii=False, indent=2))
 
     return 0 if res.exit_code == 0 else res.exit_code
-
-
-def _passthrough_to_opts(argv: List[str], catalog) -> Dict[str, object]:
-    """把透传 argv 还原成 {opt: value}，复用 build_argv。
-
-    用 catalog 的 flag 知识判断每个 token 是否为无值开关。
-    """
-    opts: Dict[str, object] = {}
-    i = 0
-    while i < len(argv):
-        tok = argv[i]
-        if tok.startswith("-"):
-            name, _, val = tok.partition("=")
-            if val:
-                opts[name] = val
-            elif catalog.is_flag(name):
-                opts[name] = "1"
-            else:
-                # 取下一个 token 作为值
-                i += 1
-                if i < len(argv):
-                    opts[name] = argv[i]
-        i += 1
-    return opts
 
 
 if __name__ == "__main__":

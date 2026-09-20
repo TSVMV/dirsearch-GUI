@@ -21,7 +21,14 @@ from ..core.output import parse_founds, parse_log, status_color
 
 
 def main() -> int:
-    home, version = config.check_dirsearch()
+    try:
+        home, version = config.check_dirsearch()
+    except FileNotFoundError as e:
+        err_root = tk.Tk()
+        err_root.withdraw()
+        messagebox.showerror("未找到 dirsearch", str(e))
+        err_root.destroy()
+        return 1
     catalog = load_catalog()
     catalog.version = version
     by_group = catalog.by_group()
@@ -138,6 +145,7 @@ def main() -> int:
             # 结果表
             rt = ttk.LabelFrame(self.root, text="  发现结果  ")
             rt.pack(fill="both", expand=True, padx=8, pady=4)
+            self.rt = rt  # toggle_expert 需要把专家面板插到结果表之前
             cols = ("time", "status", "size", "path", "redirect")
             self.tree = ttk.Treeview(rt, columns=cols, show="headings", height=6)
             titles = {"time": "时间", "status": "状态", "size": "大小",
@@ -151,9 +159,10 @@ def main() -> int:
             self.tree.pack(side="left", fill="both", expand=True)
             tsb.pack(side="right", fill="y")
             for tag in ("ok", "warn", "info", "redir", "err", "found"):
-                self.tree.tag_config(tag, foreground={
+                self.tree.tag_configure(tag, foreground={
                     "ok": "#0a7d33", "warn": "#b37000", "info": "#0b5394",
-                    "redir": "#0b7a7a", "err": "#c00000", "found": "#0a7d33"})
+                    "redir": "#0b7a7a", "err": "#c00000",
+                    "found": "#0a7d33"}[tag])
 
             # 日志
             self.log = tk.Text(self.root, height=8, state="disabled", wrap="word")
@@ -215,6 +224,7 @@ def main() -> int:
 
         def _on_done(self, res: RunResult):
             self.btn_stop.configure(state="disabled")
+            self._fill_results(res)
             s = parse_log(res.output)
             tail = "完成（exit 0）" if res.exit_code == 0 else f"结束（exit {res.exit_code}）"
             self._append(tail, "ok" if res.exit_code == 0 else "err")
@@ -251,7 +261,7 @@ def main() -> int:
                 out_q.put(("line", line))
 
             def on_done(res: RunResult):
-                self._fill_results(res)
+                # 只投递队列，界面操作（_fill_results）必须在主线程完成
                 out_q.put(("done", res))
 
             self.runner = Runner(self.home, opts, self.catalog,
@@ -271,10 +281,12 @@ def main() -> int:
 
         def toggle_expert(self):
             if self.expert.winfo_manager():
-                self.expert.forget()
+                # ttk.Notebook.forget() 需要 tab_id，从布局移除用 pack_forget
+                self.expert.pack_forget()
             else:
+                # before 必须是与 expert 同父级（root）的已管理兄弟
                 self.expert.pack(fill="both", expand=True, padx=8, pady=4,
-                                 before=self.tree)
+                                 before=self.rt)
 
         def _pick_preset(self, p: Preset):
             self.selected_preset = p
@@ -283,8 +295,9 @@ def main() -> int:
 
         # ---- 配置档 -------------------------------------------------------
         def on_save(self):
+            # 名字交给 profiles.save 用 _next_name 生成，避免删除后编号撞名覆盖
             p = profiles.Profile(
-                name=f"profile{len(profiles.list_profiles()) + 1}",
+                name="",
                 target=self.target_var.get().strip(),
                 options=self._collect())
             try:

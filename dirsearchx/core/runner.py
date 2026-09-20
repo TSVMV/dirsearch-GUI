@@ -32,13 +32,14 @@ class Runner:
     def __init__(self, home: DirsearchHome, opts: Dict[str, object],
                  catalog: Catalog,
                  on_line: Optional[Callable[[str], None]] = None,
-                 on_done: Optional[Callable[[RunResult], None]] = None):
+                 on_done: Optional[Callable[[RunResult], None]] = None,
+                 raw_argv: Optional[List[str]] = None):
         self.home = home
         self.opts = opts
         self.catalog = catalog
         self.on_line = on_line
         self.on_done = on_done
-        self.argv = build_argv(opts, catalog)
+        self.argv = raw_argv if raw_argv is not None else build_argv(opts, catalog)
         self._proc: Optional[subprocess.Popen] = None
         self._thread: Optional[threading.Thread] = None
 
@@ -54,16 +55,20 @@ class Runner:
             self._proc.kill()
 
     def _run(self) -> None:
-        proc = self._proc = self.home.spawn(self.argv)
-        out_lines: List[str] = []
-        assert proc.stdout is not None
-        for raw in proc.stdout:
-            line = strip_ansi(raw.rstrip("\n"))
-            out_lines.append(line)
-            if self.on_line:
-                self.on_line(line)
-        rc = proc.wait()
-        result = RunResult(exit_code=rc, output="\n".join(out_lines),
-                           argv=self.argv)
+        try:
+            proc = self._proc = self.home.spawn(self.argv)
+            out_lines: List[str] = []
+            assert proc.stdout is not None
+            for raw in proc.stdout:
+                line = strip_ansi(raw.rstrip("\n"))
+                out_lines.append(line)
+                if self.on_line:
+                    self.on_line(line)
+            rc = proc.wait()
+            result = RunResult(exit_code=rc, output="\n".join(out_lines),
+                               argv=self.argv)
+        except Exception as e:
+            result = RunResult(exit_code=1,
+                               output=f"dirsearch 启动失败: {e}", argv=self.argv)
         if self.on_done:
             self.on_done(result)
