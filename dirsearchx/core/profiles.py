@@ -11,7 +11,9 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-_PROFILES_DIR: Path = Path(__file__).resolve().parent.parent.parent / "profiles"
+from . import config
+
+_PROFILES_DIR: Path = config.PROFILES_DIR
 _NAME_RE = re.compile(r"^profile\d+$")
 
 

@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Security",
 ]
-dependencies = []
+dependencies = ["dirsearch>=0.4"]
 
 [project.scripts]
 dirsearch-gui = "dirsearchx.gui.app:main"

@@ -15,14 +15,18 @@
 ## 安装
 
 ```bash
-# Windows
-install.bat
-# 或手动
+# 从 PyPI 安装（推荐；会自动拉取 dirsearch 本体）
+pip install dirsearchx
+```
+
+或从源码安装（Windows 可直接跑 `install.bat`）：
+
+```bash
 git clone --depth 1 https://github.com/maurosoria/dirsearch.git vendor/dirsearch
 pip install .
 ```
 
-dirsearch 自动发现顺序：`环境变量 DIRSEARCH_HOME/DIRSEARCH_PATH` → 包内 `vendor/dirsearch` → 常见路径 → 系统 `which dirsearch`。
+dirsearch 自动发现顺序：`环境变量 DIRSEARCH_HOME/DIRSEARCH_PATH` → pip 安装的 `dirsearch` 包 → 包内 `vendor/dirsearch` → 常见路径 → 系统 `which dirsearch`。
 
 ## 启动
 

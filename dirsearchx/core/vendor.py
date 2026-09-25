@@ -1,6 +1,7 @@
-"""dirsearch vendor 发现：按 包内 vendor > 环境变量 > 常见路径 > 系统命令 顺序定位。"""
+"""dirsearch vendor 发现：按 环境变量 > pip 安装包 > 常见路径 > 系统命令 顺序定位。"""
 from __future__ import annotations
 
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -14,6 +15,10 @@ _CANDIDATES: list[str] = [
     # 包内 vendor（开发/打包时首选）
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "vendor", "dirsearch"),
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "dirsearch"),
+]
+_CANDIDATES += [
+    os.path.join(os.environ.get("USERPROFILE", os.path.expanduser("~")), "Desktop", "CTF", "web", "dirsearch"),
+    r"C:\Users\Administrator\Desktop\CTF\web\dirsearch",
 ]
 _CANDIDATES += [
     os.path.join(os.environ.get("USERPROFILE", os.path.expanduser("~")), "Desktop", "CTF", "web", "dirsearch"),
@@ -59,18 +64,27 @@ def find() -> DirsearchHome:
         if v and _is_dirsearch_root(v):
             return DirsearchHome(os.path.abspath(v), f"env:{k}")
 
-    # 2. 包内 vendor + 常见位置
+    # 2. pip 安装的 dirsearch 包（pip install dirsearchx 会自动拉取）
+    spec = importlib.util.find_spec("dirsearch")
+    if spec is not None and spec.origin:
+        pkg_dir = os.path.dirname(os.path.abspath(spec.origin))
+        if _is_dirsearch_root(pkg_dir):
+            return DirsearchHome(pkg_dir, "pip")
+
+    # 3. 包内 vendor + 常见位置
     for c in _CANDIDATES:
         c = os.path.abspath(c)
         if _is_dirsearch_root(c):
             return DirsearchHome(c, "candidate")
 
-    # 3. 系统 PATH 上的 dirsearch 命令
+    # 4. 系统 PATH 上的 dirsearch 命令
     exe = shutil.which("dirsearch")
     if exe:
         # dirsearch CLI 通常是包装脚本；取其所在目录作为根（尽力）
         return DirsearchHome(os.path.dirname(os.path.realpath(exe)), "which")
 
     raise FileNotFoundError(
-        "未找到 dirsearch。请 git clone https://github.com/maurosoria/dirsearch 到 vendor/dirsearch，"
+        "未找到 dirsearch。可用以下任一方式提供：\n"
+        "  pip install dirsearch        （推荐，自动随 dirsearchx 安装）\n"
+        "  git clone https://github.com/maurosoria/dirsearch 到 vendor/dirsearch，\n"
         "或设置环境变量 DIRSEARCH_HOME 指向其根目录。")
