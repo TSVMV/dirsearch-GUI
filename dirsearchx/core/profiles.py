@@ -10,7 +10,6 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
 
 _PROFILES_DIR: Path = Path(__file__).resolve().parent.parent.parent / "profiles"
 _NAME_RE = re.compile(r"^profile\d+$")
@@ -20,7 +19,7 @@ _NAME_RE = re.compile(r"^profile\d+$")
 class Profile:
     name: str
     target: str
-    options: Dict[str, object]
+    options: dict[str, object]
 
     def to_json(self) -> str:
         return json.dumps(
@@ -54,7 +53,7 @@ def save(p: Profile) -> str:
     return str(path)
 
 
-def load(name: str) -> Optional[Profile]:
+def load(name: str) -> Profile | None:
     try:
         path = _resolve(name)
     except ValueError:
@@ -66,7 +65,7 @@ def load(name: str) -> Optional[Profile]:
                    d.get("options", {}))
 
 
-def list_profiles() -> List[str]:
+def list_profiles() -> list[str]:
     if not _PROFILES_DIR.is_dir():
         return []
     return sorted(

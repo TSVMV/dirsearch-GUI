@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List
 
 
 @dataclass
@@ -10,12 +9,12 @@ class Preset:
     title: str
     desc: str
     category: str          # basic / adv
-    base: Dict[str, str] = field(default_factory=dict)
-    needs: List[str] = field(default_factory=list)   # 需要用户补全的选项名
+    base: dict[str, str] = field(default_factory=dict)
+    needs: list[str] = field(default_factory=list)   # 需要用户补全的选项名
 
 
 # 一键任务
-PRESETS: List[Preset] = [
+PRESETS: list[Preset] = [
     Preset("快速探测", "默认词表 + 30 线程，适合先扫个大概", "basic",
            base={"-t": "30"}, needs=["-u"]),
     Preset("后台与配置", "conf 类别，找 .git/.env 等", "basic",
@@ -43,7 +42,7 @@ PRESETS: List[Preset] = [
 ]
 
 # 常用参数快捷（主屏小格子）
-QUICK_PARAMS: List[dict] = [
+QUICK_PARAMS: list[dict] = [
     {"opt": "-t", "label": "线程"},
     {"opt": "-e", "label": "扩展名"},
     {"opt": "--wordlist-categories", "label": "词表类别"},
@@ -60,10 +59,10 @@ QUICK_PARAMS: List[dict] = [
 ]
 
 
-def merge(preset: Preset, user_opts: Dict[str, object],
-          defaults: Dict[str, str]) -> Dict[str, object]:
+def merge(preset: Preset, user_opts: dict[str, object],
+          defaults: dict[str, str]) -> dict[str, object]:
     """预设 < 默认 < 用户。用户未填的 needs 保留占位。"""
-    out: Dict[str, object] = {}
+    out: dict[str, object] = {}
     for k, v in preset.base.items():
         out[k] = v
     for k, v in defaults.items():

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import List, Optional
 
 # 结果行形如: [12:34:56] 200 -    1234 - /admin/
 # 结果行形如: [17:03:11] 200 -    24B - /.git/config
@@ -24,12 +23,12 @@ class FoundPath:
     size: int
     size_label: str
     path: str
-    redirect: Optional[str] = None
+    redirect: str | None = None
 
 
-def parse_founds(output: str) -> List[FoundPath]:
+def parse_founds(output: str) -> list[FoundPath]:
     """从完整输出里抽出所有结果路径行。"""
-    out: List[FoundPath] = []
+    out: list[FoundPath] = []
     for line in output.splitlines():
         m = _RESULT.search(line)
         if m:
@@ -49,9 +48,9 @@ def parse_founds(output: str) -> List[FoundPath]:
     return out
 
 
-def parse_log(output: str) -> List[str]:
+def parse_log(output: str) -> list[str]:
     """生成一行摘要（请求数 / 找到数 / 耗时等）。"""
-    lines: List[str] = []
+    lines: list[str] = []
     finds = parse_founds(output)
     if finds:
         lines.append(f"找到 {len(finds)} 个路径")

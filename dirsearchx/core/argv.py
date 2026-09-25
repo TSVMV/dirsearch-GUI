@@ -5,8 +5,6 @@
 """
 from __future__ import annotations
 
-from typing import Dict, List
-
 from .catalog import Catalog
 
 # 这些选项在输出 argv 时固定放最前（目标类）
@@ -16,7 +14,7 @@ _DICT = {"-w", "--wordlist-categories", "-e", "-f", "--exclude-extensions",
          "--prefixes", "--suffixes"}
 
 
-def build_argv(opts: Dict[str, object], catalog: Catalog) -> List[str]:
+def build_argv(opts: dict[str, object], catalog: Catalog) -> list[str]:
     """构建 argv（不含 "dirsearch" 本身）。
 
     只输出 opts 中出现的选项，保持其顺序；目标类（-u/-l/--cidr/--raw/-s/--config）
@@ -29,7 +27,7 @@ def build_argv(opts: Dict[str, object], catalog: Catalog) -> List[str]:
         s = str(v).strip()
         return s
 
-    out: List[str] = []
+    out: list[str] = []
     seen = set()
 
     # 目标类（顺序固定）
@@ -59,7 +57,7 @@ def build_argv(opts: Dict[str, object], catalog: Catalog) -> List[str]:
             out.append(s)
 
     # 其余：按 catalog 组顺序输出 opts 中出现的
-    for group, group_opts in catalog.by_group().items():
+    for _group, group_opts in catalog.by_group().items():
         for o in group_opts:
             if o.name in seen:
                 continue
@@ -74,6 +72,6 @@ def build_argv(opts: Dict[str, object], catalog: Catalog) -> List[str]:
     return out
 
 
-def render(argv: List[str]) -> str:
+def render(argv: list[str]) -> str:
     import shlex
     return shlex.join(argv)

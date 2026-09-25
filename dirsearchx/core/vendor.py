@@ -6,12 +6,11 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import List, Optional
 
 _ENV_KEYS = ("DIRSEARCH_HOME", "DIRSEARCH_PATH")
 
 # 常见安装位置（Windows 下 dirsearch 常被放到 CTF/工具目录）
-_CANDIDATES: List[str] = [
+_CANDIDATES: list[str] = [
     # 包内 vendor（开发/打包时首选）
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "vendor", "dirsearch"),
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "dirsearch"),
@@ -27,7 +26,7 @@ class DirsearchHome:
     path: str
     source: str
 
-    def spawn(self, argv: List[str]) -> subprocess.Popen:
+    def spawn(self, argv: list[str]) -> subprocess.Popen:
         """在 vendor 目录下启动 `python -m dirsearch <argv>`。"""
         env = dict(os.environ)
         env["PYTHONPATH"] = self.path + os.pathsep + env.get("PYTHONPATH", "")

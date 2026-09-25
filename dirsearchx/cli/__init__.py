@@ -8,14 +8,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import Dict, List, Optional
 
 from ..core import config
 from ..core.catalog import load
 from ..core.runner import Runner, RunResult
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="dirsearchx-cli",
         description="dirsearch 命令行透传（驱动 vendor 内的 dirsearch）")
@@ -42,7 +41,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     opts = _passthrough_to_opts(passthrough, catalog)
 
-    result_holder: Dict[str, object] = {}
+    result_holder: dict[str, object] = {}
 
     def on_line(line: str):
         if not args.json:
@@ -55,7 +54,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     runner.start()
     runner._thread.join()  # 等待完成
 
-    res: Optional[RunResult] = result_holder.get("res")
+    res: RunResult | None = result_holder.get("res")
     if res is None:
         print("dirsearch 未返回结果。", file=sys.stderr)
         return 1
@@ -72,12 +71,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     return 0 if res.exit_code == 0 else res.exit_code
 
 
-def _passthrough_to_opts(argv: List[str], catalog) -> Dict[str, object]:
+def _passthrough_to_opts(argv: list[str], catalog) -> dict[str, object]:
     """把透传 argv 还原成 {opt: value}，复用 build_argv。
 
     用 catalog 的 flag 知识判断每个 token 是否为无值开关。
     """
-    opts: Dict[str, object] = {}
+    opts: dict[str, object] = {}
     i = 0
     while i < len(argv):
         tok = argv[i]

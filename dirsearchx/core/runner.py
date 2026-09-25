@@ -5,7 +5,7 @@ import re
 import subprocess
 import threading
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 
 from .argv import build_argv
 from .catalog import Catalog
@@ -22,25 +22,25 @@ def strip_ansi(s: str) -> str:
 class RunResult:
     exit_code: int
     output: str
-    argv: List[str] = field(default_factory=list)
+    argv: list[str] = field(default_factory=list)
     target: str = ""
 
 
 class Runner:
     """在守护线程里跑 dirsearch，on_line 回调逐行推送（已去 ANSI）。"""
 
-    def __init__(self, home: DirsearchHome, opts: Dict[str, object],
+    def __init__(self, home: DirsearchHome, opts: dict[str, object],
                  catalog: Catalog,
-                 on_line: Optional[Callable[[str], None]] = None,
-                 on_done: Optional[Callable[[RunResult], None]] = None):
+                 on_line: Callable[[str], None] | None = None,
+                 on_done: Callable[[RunResult], None] | None = None):
         self.home = home
         self.opts = opts
         self.catalog = catalog
         self.on_line = on_line
         self.on_done = on_done
         self.argv = build_argv(opts, catalog)
-        self._proc: Optional[subprocess.Popen] = None
-        self._thread: Optional[threading.Thread] = None
+        self._proc: subprocess.Popen | None = None
+        self._thread: threading.Thread | None = None
 
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
@@ -55,7 +55,7 @@ class Runner:
 
     def _run(self) -> None:
         proc = self._proc = self.home.spawn(self.argv)
-        out_lines: List[str] = []
+        out_lines: list[str] = []
         assert proc.stdout is not None
         for raw in proc.stdout:
             line = strip_ansi(raw.rstrip("\n"))

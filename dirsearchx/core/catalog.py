@@ -2,19 +2,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
 
 
 @dataclass
 class Option:
     name: str                # 形如 "-t" 或 "--threads"
-    long_name: Optional[str] = None
+    long_name: str | None = None
     is_flag: bool = False    # 无取值的布尔开关
     value_help: str = ""     # 取值说明（简短）
     group: str = "General"
 
 
-def _o(name: str, long_name: Optional[str] = None,
+def _o(name: str, long_name: str | None = None,
        is_flag: bool = False, help_: str = "") -> Option:
     """Option 构造助手：避免位置参数错位。"""
     return Option(name=name, long_name=long_name, is_flag=is_flag,
@@ -23,7 +22,7 @@ def _o(name: str, long_name: Optional[str] = None,
 
 # 分组与选项清单（取自 dirsearch --help-all，仅收录 GUI 常用项；
 # 完整选项可走 CLI 透传，不强制在此穷举）
-OPTIONS: List[Option] = [
+OPTIONS: list[Option] = [
     # --- 目标 ---
     _o("-u", long_name="--url", is_flag=False, help_="目标 URL，可多次"),
     _o("-l", long_name="--urls-file", is_flag=False, help_="URL 列表文件"),
@@ -138,7 +137,7 @@ OPTIONS: List[Option] = [
 ]
 
 # 组归类（专家面板 tab 顺序）
-GROUPS: Dict[str, List[str]] = {
+GROUPS: dict[str, list[str]] = {
     "目标": ["-u", "-l", "--cidr", "--raw", "-s", "--config"],
     "字典": ["-w", "--wordlist-categories", "-e", "-f", "--exclude-extensions",
             "--prefixes", "--suffixes"],
@@ -167,13 +166,13 @@ GROUPS: Dict[str, List[str]] = {
 
 
 class Catalog:
-    def __init__(self, options: Optional[List[Option]] = None,
-                 groups: Optional[Dict[str, List[str]]] = None,
+    def __init__(self, options: list[Option] | None = None,
+                 groups: dict[str, list[str]] | None = None,
                  version: str = ""):
         self.options = options if options is not None else OPTIONS
         self.groups = groups if groups is not None else GROUPS
         self.version = version
-        self.by_name: Dict[str, Option] = {}
+        self.by_name: dict[str, Option] = {}
         for o in self.options:
             self.by_name[o.name] = o
             if o.long_name:
@@ -183,8 +182,8 @@ class Catalog:
         o = self.by_name.get(name)
         return o.is_flag if o else True
 
-    def by_group(self) -> Dict[str, List[Option]]:
-        out: Dict[str, List[Option]] = {}
+    def by_group(self) -> dict[str, list[Option]]:
+        out: dict[str, list[Option]] = {}
         for g, names in self.groups.items():
             out[g] = [self.by_name[n] for n in names if n in self.by_name]
         return out
