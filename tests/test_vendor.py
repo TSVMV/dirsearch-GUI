@@ -29,6 +29,8 @@ def test_find_raises_when_nothing_found(monkeypatch, tmp_path: Path):
     monkeypatch.delenv("DIRSEARCH_HOME", raising=False)
     monkeypatch.delenv("DIRSEARCH_PATH", raising=False)
     monkeypatch.setattr(vendor.shutil, "which", lambda _: None)
+    # dirsearchx 声明了 dirsearch 依赖，CI 会装它；屏蔽 pip 包发现才能测到兜底分支
+    monkeypatch.setattr(vendor.importlib.util, "find_spec", lambda _: None)
     monkeypatch.setattr(vendor, "_CANDIDATES", [str(tmp_path / "nope")])
     with pytest.raises(FileNotFoundError) as exc:
         vendor.find()
